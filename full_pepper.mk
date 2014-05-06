@@ -22,12 +22,17 @@
 #
 #
  
-
-# Inherit from AOSP.
+# Torch
+PRODUCT_PACKAGES := \
+    Torch
+    
+# Inherit from those products. Most specific first.
 $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
 
+#charging animation
+$(call inherit-product, device/sony/pepper/prebuilt/resources-480x854.mk)
 
-# Inherit from device
+# Inherit from pepper device
 $(call inherit-product, device/sony/pepper/pepper.mk)
 
 # Set correct device information.

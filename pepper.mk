@@ -1,20 +1,8 @@
-#
-# Copyright (C) 2014 Android Open Source Project
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-
+# Inherit from AOSP
 $(call inherit-product, frameworks/native/build/phone-hdpi-512-dalvik-heap.mk)
+
+# Inherit from products. Most specific first.
+$(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
 
 # Inherit from the common montblanc definitions
 $(call inherit-product, device/sony/montblanc-common/montblanc.mk)
@@ -27,10 +15,6 @@ $(call inherit-product-if-exists, vendor/sony/pepper/pepper-vendor.mk)
 # Device specific settings overlays
 DEVICE_PACKAGE_OVERLAYS += device/sony/pepper/overlay
 
-
-# Device specific headers
-TARGET_SPECIFIC_HEADER_PATH += device/sony/pepper/include
-
 # These are the hardware-specific features
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.telephony.gsm.xml:system/etc/permissions/android.hardware.telephony.gsm.xml \
@@ -40,30 +24,6 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/com.android.nfc_extras.xml:system/etc/permissions/com.google.android.nfc_extras.xml \
     frameworks/native/data/etc/android.hardware.nfc.hce.xml:system/etc/permissions/android.hardware.nfc.hce.xml 
  
-# NFC Support
-PRODUCT_PACKAGES += \
-    libnfc \
-    libnfc_jni \
-    Nfc \
-    Tag \
-    com.android.nfc_extras
-
-
-PRODUCT_COPY_FILES += \
-    frameworks/native/data/etc/com.android.nfc_extras.xml:system/etc/permissions/com.android.nfc_extras.xml \
-    frameworks/native/data/etc/android.hardware.nfc.hce.xml:system/etc/permissions/android.hardware.nfc.hce.xml
-
-
-# NFCEE access control
-ifeq ($(TARGET_BUILD_VARIANT),user)
-    NFCEE_ACCESS_PATH := $(LOCAL_PATH)/config/nfcee_access.xml
-else
-    NFCEE_ACCESS_PATH := $(LOCAL_PATH)/config/nfcee_access_debug.xml
-endif
-PRODUCT_COPY_FILES += \
-    $(NFCEE_ACCESS_PATH):system/etc/nfcee_access.xml
-
-
 # Device specific configuration scripts
 PRODUCT_COPY_FILES += \
         $(LOCAL_PATH)/config/fstab.st-ericsson:root/fstab.st-ericsson \
@@ -82,17 +42,12 @@ PRODUCT_COPY_FILES += \
 # Device specific bootlogo and charging animation
 PRODUCT_COPY_FILES += \
 	$(LOCAL_PATH)/prebuilt/logo-480x854.rle:root/logo.rle 
-	
 $(call inherit-product, $(LOCAL_PATH)/prebuilt/resources-480x854.mk)
 
-# Bootanimation
-PRODUCT_COPY_FILES += \
-   $(LOCAL_PATH)/../../../vendor/cm/prebuilt/common/bootanimation/480.zip:system/media/bootanimation.zip
-   
 #TWRP
 PRODUCT_COPY_FILES += \
 $(LOCAL_PATH)/config/twrp.fstab:recovery/root/etc/twrp.fstab
-   
+
 # Device specific USB configuration script
 PRODUCT_COPY_FILES += $(LOCAL_PATH)/config/init.st-ericsson.usb.rc:root/init.st-ericsson.usb.rc
 
@@ -112,7 +67,7 @@ PRODUCT_COPY_FILES += \
 # Reference: http://developer.android.com/guide/practices/screens_support.html
 # Note: In PRODUCT_AAPT_PREF_CONFIG set the proper one (e.g. hdpi), in PRODUCT_AAPT_CONFIG set the proper one and the previous one (e.g. mdpi)
 PRODUCT_AAPT_PREF_CONFIG := hdpi
-PRODUCT_AAPT_CONFIG := mdpi hdpi
+PRODUCT_AAPT_CONFIG := mdpi hdpi xhdpi xxhdpi
 
 
 # Android kind of memory
@@ -141,6 +96,13 @@ PRODUCT_PROPERTY_OVERRIDES += \
         ste.video.decoder.max.res=720p \
         ste.video.decoder.h264.max.lev=3.2
 
+# Reduce background apps limit to 16 on low-tier devices
+PRODUCT_PROPERTY_OVERRIDES += \
+  ro.sys.fw.bg_apps_limit=16
+
+# Disable JIT code cache to free up some ram when the device is running
+PRODUCT_PROPERTY_OVERRIDES += \
+  dalvik.vm.jit.codecachesize=0
 
 # Device specific proprieties
 # References: 
@@ -152,20 +114,5 @@ PRODUCT_PROPERTY_OVERRIDES += \
         ro.hwui.layer_cache_size=7 \
         ro.hwui.path_cache_size=2 \
         ro.sf.lcd_density=240 \
-        ro.config.low_ram=true
-
-#Kernel modules
-PRODUCT_COPY_FILES += \
-  $(LOCAL_PATH)/prebuilt/modules/bnep.ko:system/lib/modules/bnep.ko \
-  $(LOCAL_PATH)/prebuilt/modules/cifs.ko:system/lib/modules/cifs.ko \
-  $(LOCAL_PATH)/prebuilt/modules/cw1200_core.ko:system/lib/modules/cw1200_core.ko \
-  $(LOCAL_PATH)/prebuilt/modules/cw1200_wlan.ko:system/lib/modules/cw1200_wlan.ko \
-  $(LOCAL_PATH)/prebuilt/modules/frandom.ko:system/lib/modules/frandom.ko \
-  $(LOCAL_PATH)/prebuilt/modules/mmc_test.ko:system/lib/modules/mmc_test.ko \
-  $(LOCAL_PATH)/prebuilt/modules/nls_utf8.ko:system/lib/modules/nls_utf8.ko \
-  $(LOCAL_PATH)/prebuilt/modules/oprofile.ko:system/lib/modules/oprofile.ko \
-  $(LOCAL_PATH)/prebuilt/modules/pwr.ko:system/lib/modules/pwr.ko \
-  $(LOCAL_PATH)/prebuilt/modules/rng-core.ko:system/lib/modules/rng-core.ko \
-  $(LOCAL_PATH)/prebuilt/modules/scsi_wait_scan.ko:system/lib/modules/scsi_wait_scan.ko \
-  $(LOCAL_PATH)/prebuilt/modules/tun.ko:system/lib/modules/tun.ko
-  
+        ro.config.low_ram=true \
+        dalvik.vm.heapminfree=1m

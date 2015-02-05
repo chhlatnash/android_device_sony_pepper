@@ -34,7 +34,7 @@ busybox echo '255' > /sys/devices/platform/nmk-i2c.2/i2c-2/2-0040/leds/blue/brig
 busybox usleep 300000
 
 # trigger vibration
-busybox echo '200' > /sys/class/timed_output/vibrator/enable
+busybox echo '50' > /sys/class/timed_output/vibrator/enable
 
 # disable button-backlight
 busybox echo '0' > /sys/devices/platform/nmk-i2c.2/i2c-2/2-0040/leds/button-brightness/brightness
